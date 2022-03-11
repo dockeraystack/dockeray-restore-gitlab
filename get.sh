@@ -26,42 +26,48 @@ set -e
 : ${BACKUP_GITLAB_API_ENDPOINT:?"BACKUP_GITLAB_API_ENDPOINT env variable is required"}
 : ${BACKUP_GITLAB_ACCESS_TOKEN:?"BACKUP_GITLAB_ACCESS_TOKEN env variable is required"}
 
-LATEST=${LATEST}
+if [[ "$GENERATE_BACKUP_EMPTY_FILES" -eq "true" ]]; then
+    echo $(date "+%Y/%m/%d %H:%M:%S")" Generating backup empty files."
 
-if [[ -z "$LATEST" ]]; then
-    echo $(date "+%Y/%m/%d %H:%M:%S")" Retrieving date of the latest backup."
+    echo "SELECT 1;" > /tmp/lportal.sql | gzip > $DATA_PATH/dump.sql.gz
+    tar -czvf $DATA_PATH/data.tgz --files-from=/dev/null
+else 
+    LATEST=${LATEST}
 
-    is_there_backup=$(curl -L --header "PRIVATE-TOKEN: $BACKUP_GITLAB_ACCESS_TOKEN" $BACKUP_GITLAB_API_ENDPOINT/liferay-backup/$ENVIRONMENT/LATEST -o /tmp/LATEST -w '%{http_code}\n' -s)
+    if [[ -z "$LATEST" ]]; then
+        echo $(date "+%Y/%m/%d %H:%M:%S")" Retrieving date of the latest backup."
 
-    if [[ $is_there_backup -eq 200 ]]; then
-        latest=$(head -n 1 /tmp/LATEST)
+        is_there_backup=$(curl -L --header "PRIVATE-TOKEN: $BACKUP_GITLAB_ACCESS_TOKEN" $BACKUP_GITLAB_API_ENDPOINT/liferay-backup/$ENVIRONMENT/LATEST -o /tmp/LATEST -w '%{http_code}\n' -s)
+
+        if [[ $is_there_backup -eq 200 ]]; then
+            latest=$(head -n 1 /tmp/LATEST)
+        else
+            echo $(date "+%Y/%m/%d %H:%M:%S")" [WARN] No backup was found"
+        fi
     else
-        echo $(date "+%Y/%m/%d %H:%M:%S")" [WARN] No backup was found"
+        latest=$LATEST
     fi
-else
-    latest=$LATEST
+
+    echo $(date "+%Y/%m/%d %H:%M:%S")" Looking for backups at date: $latest"
+
+    dump_file_path=$(head -n 2 /tmp/LATEST | tail -n 1)
+
+    is_there_dump_file=$(curl -L --header "PRIVATE-TOKEN: $BACKUP_GITLAB_ACCESS_TOKEN" $dump_file_path -o /tmp/dump.sql.gz -w '%{http_code}\n' -s)
+
+    if [[ $is_there_dump_file -eq 200 ]]; then
+        cp /tmp/dump.sql.gz $DATA_PATH/dump.sql.gz
+    else
+        echo $(date "+%Y/%m/%d %H:%M:%S")" [WARN] No backup dump file at path $dump_file_path was found"
+    fi
+
+    data_file_path=$(head -n 3 /tmp/LATEST | tail -n 1)
+
+    is_there_data_file=$(curl -L --header "PRIVATE-TOKEN: $BACKUP_GITLAB_ACCESS_TOKEN" $data_file_path -o /tmp/data.tgz -w '%{http_code}\n' -s)
+
+    if [[ $is_there_data_file -eq 200 ]]; then
+        cp /tmp/data.tgz $DATA_PATH/data.tgz
+    else
+        echo $(date "+%Y/%m/%d %H:%M:%S")" [WARN] No backup data file at path $data_file_path was found"
+    fi
 fi
-
-echo $(date "+%Y/%m/%d %H:%M:%S")" Looking for backups at date: $latest"
-
-dump_file_path=$(head -n 2 /tmp/LATEST | tail -n 1)
-
-is_there_dump_file=$(curl -L --header "PRIVATE-TOKEN: $BACKUP_GITLAB_ACCESS_TOKEN" $dump_file_path -o /tmp/dump.sql.gz -w '%{http_code}\n' -s)
-
-if [[ $is_there_dump_file -eq 200 ]]; then
-    cp /tmp/dump.sql.gz $DATA_PATH/dump.sql.gz
-else
-    echo $(date "+%Y/%m/%d %H:%M:%S")" [WARN] No backup dump file at path $dump_file_path was found"
-fi
-
-data_file_path=$(head -n 3 /tmp/LATEST | tail -n 1)
-
-is_there_data_file=$(curl -L --header "PRIVATE-TOKEN: $BACKUP_GITLAB_ACCESS_TOKEN" $data_file_path -o /tmp/data.tgz -w '%{http_code}\n' -s)
-
-if [[ $is_there_data_file -eq 200 ]]; then
-    cp /tmp/data.tgz $DATA_PATH/data.tgz
-else
-    echo $(date "+%Y/%m/%d %H:%M:%S")" [WARN] No backup data file at path $data_file_path was found"
-fi
-
 echo $(date "+%Y/%m/%d %H:%M:%S")" Job get finished: $(date)"
