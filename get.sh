@@ -26,7 +26,7 @@ set -e
 : ${BACKUP_GITLAB_API_ENDPOINT:?"BACKUP_GITLAB_API_ENDPOINT env variable is required"}
 : ${BACKUP_GITLAB_ACCESS_TOKEN:?"BACKUP_GITLAB_ACCESS_TOKEN env variable is required"}
 
-if [[ "$GENERATE_BACKUP_EMPTY_FILES" -eq "true" ]]; then
+if [[ "$GENERATE_BACKUP_EMPTY_FILES" == "true" ]]; then
     echo $(date "+%Y/%m/%d %H:%M:%S")" Generating backup empty files."
 
     echo "SELECT 1;" > /tmp/lportal.sql | gzip > $DATA_PATH/dump.sql.gz
