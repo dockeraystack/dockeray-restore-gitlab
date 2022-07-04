@@ -57,6 +57,7 @@ else
     is_there_dump_file=$(curl -L --header "PRIVATE-TOKEN: $BACKUP_GITLAB_ACCESS_TOKEN" $dump_file_path -o /tmp/dump.sql.gz -w '%{http_code}\n' -s)
 
     if [[ $is_there_dump_file -eq 200 ]]; then
+        echo $(date "+%Y/%m/%d %H:%M:%S")" [INFO] Found dump file at path $dump_file_path"
         cp /tmp/dump.sql.gz $DATA_PATH/dump.sql.gz
     else
         echo $(date "+%Y/%m/%d %H:%M:%S")" [WARN] No backup dump file at path $dump_file_path was found"
@@ -65,6 +66,7 @@ else
     is_there_data_file=$(curl -L --header "PRIVATE-TOKEN: $BACKUP_GITLAB_ACCESS_TOKEN" $data_file_path -o /tmp/data.tgz -w '%{http_code}\n' -s)
 
     if [[ $is_there_data_file -eq 200 ]]; then
+        echo $(date "+%Y/%m/%d %H:%M:%S")" [INFO] Found data file at path $data_file_path"
         cp /tmp/data.tgz $DATA_PATH/data.tgz
     else
         echo $(date "+%Y/%m/%d %H:%M:%S")" [WARN] No backup data file at path $data_file_path was found"
