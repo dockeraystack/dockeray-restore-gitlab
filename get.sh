@@ -41,16 +41,18 @@ else
 
         if [[ $is_there_backup -eq 200 ]]; then
             latest=$(head -n 1 /tmp/LATEST)
+            dump_file_path=$(head -n 2 /tmp/LATEST | tail -n 1)
+            data_file_path=$(head -n 3 /tmp/LATEST | tail -n 1)
         else
             echo $(date "+%Y/%m/%d %H:%M:%S")" [WARN] No backup was found"
         fi
     else
         latest=$LATEST
+        dump_file_path="$BACKUP_GITLAB_API_ENDPOINT/liferay-backup/$ENVIRONMENT/liferay-dump-prd-$LATEST.sql.gz"
+        data_file_path="$BACKUP_GITLAB_API_ENDPOINT/liferay-backup/$ENVIRONMENT/liferay-data-prd-$LATEST.tar.gz"
     fi
 
     echo $(date "+%Y/%m/%d %H:%M:%S")" Looking for backups at date: $latest"
-
-    dump_file_path=$(head -n 2 /tmp/LATEST | tail -n 1)
 
     is_there_dump_file=$(curl -L --header "PRIVATE-TOKEN: $BACKUP_GITLAB_ACCESS_TOKEN" $dump_file_path -o /tmp/dump.sql.gz -w '%{http_code}\n' -s)
 
@@ -59,8 +61,6 @@ else
     else
         echo $(date "+%Y/%m/%d %H:%M:%S")" [WARN] No backup dump file at path $dump_file_path was found"
     fi
-
-    data_file_path=$(head -n 3 /tmp/LATEST | tail -n 1)
 
     is_there_data_file=$(curl -L --header "PRIVATE-TOKEN: $BACKUP_GITLAB_ACCESS_TOKEN" $data_file_path -o /tmp/data.tgz -w '%{http_code}\n' -s)
 
