@@ -23,14 +23,16 @@ umask 0
 set -e
 
 : ${DATA_PATH:="/data"}
+: ${DUMP_FILENAME:="dump.sql.gz"}
+: ${DATA_FILENAME:="data.tgz"}
 : ${BACKUP_GITLAB_API_ENDPOINT:?"BACKUP_GITLAB_API_ENDPOINT env variable is required"}
 : ${BACKUP_GITLAB_ACCESS_TOKEN:?"BACKUP_GITLAB_ACCESS_TOKEN env variable is required"}
 
 if [[ "$GENERATE_BACKUP_EMPTY_FILES" == "true" ]]; then
     echo $(date "+%Y/%m/%d %H:%M:%S")" Generating backup empty files."
 
-    echo "SELECT 1;" > /tmp/lportal.sql | gzip > $DATA_PATH/dump.sql.gz
-    tar -czvf $DATA_PATH/data.tgz --files-from=/dev/null
+    echo "SELECT 1;" > /tmp/lportal.sql | gzip > $DATA_PATH/$DUMP_FILENAME
+    tar -czvf $DATA_PATH/$DATA_FILENAME --files-from=/dev/null
 else 
     LATEST=${LATEST}
 
@@ -58,7 +60,7 @@ else
 
     if [[ $is_there_dump_file -eq 200 ]]; then
         echo $(date "+%Y/%m/%d %H:%M:%S")" [INFO] Found dump file at path $dump_file_path"
-        cp /tmp/dump.sql.gz $DATA_PATH/dump.sql.gz
+        cp /tmp/dump.sql.gz $DATA_PATH/$DUMP_FILENAME
     else
         echo $(date "+%Y/%m/%d %H:%M:%S")" [WARN] No backup dump file at path $dump_file_path was found"
     fi
@@ -67,7 +69,7 @@ else
 
     if [[ $is_there_data_file -eq 200 ]]; then
         echo $(date "+%Y/%m/%d %H:%M:%S")" [INFO] Found data file at path $data_file_path"
-        cp /tmp/data.tgz $DATA_PATH/data.tgz
+        cp /tmp/data.tgz $DATA_PATH/$DATA_FILENAME
     else
         echo $(date "+%Y/%m/%d %H:%M:%S")" [WARN] No backup data file at path $data_file_path was found"
     fi
