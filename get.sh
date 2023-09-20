@@ -50,8 +50,8 @@ else
         fi
     else
         latest=$LATEST
-        dump_file_path="$BACKUP_GITLAB_API_ENDPOINT/liferay-backup/$ENVIRONMENT/liferay-dump-prd-$LATEST.sql.gz"
-        data_file_path="$BACKUP_GITLAB_API_ENDPOINT/liferay-backup/$ENVIRONMENT/liferay-data-prd-$LATEST.tar.gz"
+        dump_file_path="$BACKUP_GITLAB_API_ENDPOINT/liferay-backup/$ENVIRONMENT/liferay-dump-$ENVIRONMENT-$LATEST.sql.gz"
+        data_file_path="$BACKUP_GITLAB_API_ENDPOINT/liferay-backup/$ENVIRONMENT/liferay-data-$ENVIRONMENT-$LATEST.tar.gz"
     fi
 
     echo $(date "+%Y/%m/%d %H:%M:%S")" Looking for backups at date: $latest"
