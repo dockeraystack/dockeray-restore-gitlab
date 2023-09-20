@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 set -e
 
 echo $(date "+%Y/%m/%d %H:%M:%S")" Job get started"
